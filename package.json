@@ -1,0 +1,25 @@
+{
+  "author": "Ilia Kuznetsov",
+  "name": "yet-another-jquery",
+  "preferGlobal": "true",
+  "version": "0.0.1",
+  "private": false,
+  "contributors": [
+    {
+      "name": "Ilia Kuznetsov",
+      "email": "i.kuznecov@corp.mail.com"
+    }
+  ],
+  "dependencies": {
+    "gulp": "*",
+    "gulp-util": "*",
+    "gulp-rename": "*",
+    "gulp-concat": "*",
+    "gulp-uglify": "*",
+    "gulp-gzip": "*",
+    "gulp-beautify": "*",
+    "run-sequence": "*"
+  },
+  "devDependencies": {
+  }
+}
