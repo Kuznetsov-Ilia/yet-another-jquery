@@ -32,8 +32,8 @@ function dev () {
     .src(['build/polyfills.js', 'build/plugins.js','build/services.js'])
     .pipe(concat('$.dev.js'))
     //.pipe(beautify(beautifyOpts))
-    //.pipe(gulp.dest('dist'))
-    .pipe(gulp.dest('../otvet/app/admstatic/js'))
+    .pipe(gulp.dest('dist'))
+    //.pipe(gulp.dest('../otvet/app/admstatic/js'))
     //.pipe(gzip())
     //.pipe(gulp.dest('dist'))
 }
