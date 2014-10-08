@@ -1,11 +1,3 @@
-var Np = Node.prototype;
-var Ep = Element.prototype;
-Np.matches = Np.is = Np.matches || Np.matchesSelector || Np.msMatchesSelector || Np.mozMatchesSelector || Ep.webkitMatchesSelector || Np.oMatchesSelector;
-Np.on = on;
-Np.off = off;
-Np.trigger = trigger;
-Np.handlers = {};
-
 Np.find = function (selector) {
   switch (selector.charAt(0)) {
   case '#':
@@ -23,6 +15,25 @@ Np.findAll = function (selector) {
 };
 
 
-for (var i in UTILS) {
-  Np[i] = UTILS[i];
+NLp.find = Ap.find = function (selector) {
+  this.each(function (node) {
+    var r = node.find(selector);
+    if (r) {
+      return r;
+    }
+  })
+  return false;
+}
+
+NLp.findAll = Ap.findAll = function (selector) {
+  var result = [];
+  var r;
+
+  this.each(function (node) {
+    r = node.findAll(selector);
+    if (r) {
+      result.push(r);
+    }
+  })
+  return result;
 }

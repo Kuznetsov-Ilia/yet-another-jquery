@@ -6,9 +6,6 @@ function initPreloader(node, show) {
   $.preloader = doPreloader;
   doPreloader(node, show);
 }
-
-$.preloader = initPreloader;
-
 function doPreloader(node, show) {
   if ($.is(show)) {
     if (node._preloader) {
@@ -19,11 +16,15 @@ function doPreloader(node, show) {
     }
   } else {
     if (node._preloader) {
-      delete(node._preloader);
       try {
         node.removeChild(node._preloader);
       } catch(e) {}
+      delete(node._preloader);
     }
   }
   return node;
 }
+
+
+$.preloader = initPreloader;
+

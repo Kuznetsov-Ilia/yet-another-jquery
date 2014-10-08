@@ -15,19 +15,74 @@ var UTILS = {
     }
     return width;
   },
+  offset: function () {
+    var box = this.getBoundingClientRect();
+    return {
+      top: box.top + W.pageYOffset - H.clientTop,
+      left: box.left + W.pageXOffset - H.clientLeft
+    }
+  },
+  height: function (value) {
+    if ($.isset(value)) {
+      value = parseInt(value);
+      this.style.height = value + 'px';
+      return value;
+    } else {
+      return parseInt(W.getComputedStyle(this, null).height);
+    }
+  },
+  width: function (value) {
+    if ($.isset(value)) {
+      value = parseInt(value);
+      this.style.width = value + 'px';
+      return value;
+    } else {
+      return parseInt(W.getComputedStyle(this, null).width);
+    }
+  },
+  position: function () {
+    return {
+      left: this.offsetLeft,
+      top: this.offsetTop
+    }
+  },
+
+
   parent: function (filter) {
     if ($.isset(filter)) {
-      var parent = this;
-      var result = [];
-      while (parent = parent.parentElement) {
-        if (parent.matches(filter)) {
-          result.push(parent);
+      var filterFn;
+      if ($.isNumber(filter)) {
+        filterFn = function(node, i) {
+          return i === filter
+        }
+      } else {
+        filterFn = function(node) {
+          return node.matches(filter)
         }
       }
-      return result;
+
+      var parent = this;
+      var i = 1;
+      while (parent = parent.parentElement) {
+        if (filterFn(parent, i)) {
+          return parent;
+        }
+        i++;
+      }
+      return false;
     } else {
       return this.parentElement;
     }
+  },
+  siblings: function (filter) {
+    var _this = this;
+    return this.parent().children.filter(function (child) {
+      var valid = child !== _this;
+      if (valid && $.isset(filter)) {
+        valid = child.matches(filter);
+      }
+      return valid;
+    });
   },
   prev: function (filter) {
     if ($.isset(filter)) {
@@ -68,35 +123,6 @@ var UTILS = {
       return this.firstChild;
     }
   },
-  data: function (key, value) {
-    var id;
-    if ('__CACHE_KEY__' in this) {
-      id = this['__CACHE_KEY__'];
-    } else {
-      this['__CACHE_KEY__'] = id = CACHE_KEY++;
-      CACHE[id] = $.extend({}, this.dataset);
-    }
-    var cached = CACHE[id];
-    if ($.isObject(key)) {
-      for (var i in key) {
-        cached[i] = key[i];
-      }
-    } else if ($.isset(key)) {
-      if ($.isset(value)) {
-        cached[key] = value;
-        return value;
-      }
-      return cached[key];
-    }
-    return cached;
-  },
-  offset: function () {
-    var box = this.getBoundingClientRect();
-    return {
-      top: box.top + W.pageYOffset - H.clientTop,
-      left: box.left + W.pageXOffset - H.clientLeft
-    }
-  },
   after: function (html, position) {
     if (position) {
       position = 'afterend';
@@ -134,6 +160,28 @@ var UTILS = {
     }
     return '';
   },
+  append: function (node) {
+    return this.parent().appendChild(node);
+  },
+  prepend: function (node) {
+    if ($.isNode(node)) {
+      this.parent().insertBefore(node, this.parent().firstChild);
+    } else if ($.isArray(node)) {
+      var _this = this;
+      node.each(function (n) {
+        _this.prepend(n);
+      });
+    }
+    return this;
+  },
+  replaceWith: function (stringHTML) {
+    if ($.isset(stringHTML)) {
+      this.outerHTML = stringHTML;
+    }
+    return this;
+  },
+
+
   css: function (ruleName, value) {
     if ($.isObject(ruleName)) {
       for (var i in ruleName) {
@@ -149,6 +197,28 @@ var UTILS = {
       }
     }
     return '';
+  },
+  data: function (key, value) {
+    var id;
+    if ('__CACHE_KEY__' in this) {
+      id = this['__CACHE_KEY__'];
+    } else {
+      this['__CACHE_KEY__'] = id = CACHE_KEY++;
+      CACHE[id] = $.extend({}, this.dataset);
+    }
+    var cached = CACHE[id];
+    if ($.isObject(key)) {
+      for (var i in key) {
+        cached[i] = key[i];
+      }
+    } else if ($.isset(key)) {
+      if ($.isset(value)) {
+        cached[key] = value;
+        return value;
+      }
+      return cached[key];
+    }
+    return cached;
   },
   attr: function (name, value) {
     if ($.isObject(name)) {
@@ -166,71 +236,21 @@ var UTILS = {
     }
     return '';
   },
-  append: function (node) {
-    return this.parent().appendChild(node);
-  },
-  prepend: function (node) {
-    if ($.isNode(node)) {
-      this.parent().insertBefore(node, this.parent().firstChild);
-    } else if ($.isArray(node)) {
-      var _this = this;
-      node.each(function (n) {
-        _this.prepend(n);
-      });
-    }
-    return this;
-  },
-  height: function (value) {
-    if ($.isset(value)) {
-      value = parseInt(value);
-      this.style.height = value + 'px';
-      return value;
-    } else {
-      return parseInt(W.getComputedStyle(this, null).height);
-    }
-  },
-  width: function (value) {
-    if ($.isset(value)) {
-      value = parseInt(value);
-      this.style.width = value + 'px';
-      return value;
-    } else {
-      return parseInt(W.getComputedStyle(this, null).width);
-    }
-  },
-  position: function () {
-    return {
-      left: this.offsetLeft,
-      top: this.offsetTop
-    }
-  },
-  replaceWith: function (stringHTML) {
-    if ($.isset(stringHTML)) {
-      this.outerHTML = stringHTML;
-    }
-    return this;
-  },
   text: function (textString) {
     if ($.isset(textString)) {
       this.textContent = textString;
-      return textString;
+      return this;
     } else {
       return this.textContent;
     }
   },
-  siblings: function (filter) {
-    var _this = this;
-    return this.parent().children.filter(function (child) {
-      var valid = child !== _this;
-      if (valid && $.isset(filter)) {
-        valid = child.matches(filter);
-      }
-      return valid;
-    });
-  },
   html: function(string) {
-    this.innerHTML = string;
-    return this;
+    if ($.isset(string)) {
+      this.innerHTML = string;
+      return this;
+    } else {
+      return this.innerHTML;
+    }
   },
   clone: function() {
     return this.cloneNode(true);
@@ -254,4 +274,9 @@ function nodeListToNode(methodName) {
     });
     return returnVals;
   }
+}
+
+for (var i in UTILS) {
+  Np[i] = UTILS[i];
+  NLp[i] = Ap[i] = nodeListToNode(i);
 }

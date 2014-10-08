@@ -1,4 +1,16 @@
+W = window;
+D = document;
+B = D.body;
+H = D.documentElement;
+
+var NLp = NodeList.prototype;
+var Np = Node.prototype;
+var Ep = Element.prototype;
+var Ap = Array.prototype;
+var Fp = Function.prototype;
+var HFE = HTMLFormElement.prototype;
 $ = {
+
   isRegExp: function (value) {
     return $.isset(value) && value instanceof RegExp;
   },
@@ -33,12 +45,6 @@ $ = {
     return input1 === input2 || JSON.stringify(input1) == JSON.stringify(input2);
   },
 
-  now: Date.now ? Date.now : function () {
-    return +(new Date)
-  },
-  new: function (tagName) {
-    return D.createElement(tagName || 'div');
-  },
 
   each: function(collection, func) {
     for (var i = 0, l = collection.length; i < l; i++) {
@@ -52,7 +58,7 @@ $ = {
         $.extend(original, arguments[i]);
       }
     } else {
-      if ($.isObject(extended)) {
+      if ($.isObject) {
         for (var key in extended) {
           original[key] = extended[key];
         }
@@ -61,9 +67,16 @@ $ = {
     return original;
   },
 
+  new: function (tagName) {
+    return D.createElement(tagName || 'div');
+  },
+  now: Date.now ? Date.now : function () {
+    return +(new Date)
+  },
   rand: function () {
     return (Math.random() * 1e17).toString(36)
   },
+
   result: function (object, key) {
     if ($.isObject(object)) {
       var value = object[key];
@@ -152,7 +165,7 @@ $ = {
     var s = [];
     var add = function (key, value) {
       if ($.isArray(value)) {
-        s.push(encodeURIComponent(key) + '=' + value.map(encodeURIComponent).join(','));
+        s.push($.param.arrFunc(key, value));
       } else {
         value = value === null ? '' : value;
         s.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
@@ -173,5 +186,19 @@ $ = {
     return s.join('&').replace(r20, '+');
   }
 }
-
 var r20 = /%20/g;
+
+$.param.arrFunc = array2semicolonList;
+
+function array2semicolonList (key, value) {
+  return encodeURIComponent(key) + '=' + value.map(encodeURIComponent).join(',')
+}
+function array2legacy(key, value) {
+  return value.map(function(val){
+    return encodeURIComponent(key) + '=' + encodeURIComponent(val)
+  }).join('&').replace(r20, '+')
+}
+
+$.param.setLegacy = function (flag) {
+  $.param.arrFunc = flag ? array2legacy : array2semicolonList
+}

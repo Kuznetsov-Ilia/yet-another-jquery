@@ -77,6 +77,18 @@ function delegate(selector, handler) {
   return function (event) {
     if (event.target.matches(selector)) {
       return handler(event);
+    } else if (event.target.matches(selector + ' *')) {
+      var target = event.target.parent(selector);
+      var pseudoEvent = {
+        target: target,
+        realTarget: event.target
+      };
+      ['initMouseEvent', 'initUIEvent', 'initEvent', 'preventDefault', 'stopImmediatePropagation', 'stopPropagation'].each(function (e) {
+        if (e in event) {
+          pseudoEvent[e] = event[e].bind(event);
+        }
+      })
+      return handler($.extend({}, event, pseudoEvent));
     }
   }
 }
@@ -90,3 +102,34 @@ function trigger(type, data) {
   this.dispatchEvent(event);
   return this;
 }
+
+
+W.on = on;
+W.off = off;
+W.trigger = trigger;
+W.handlers = {};
+
+Np.on = on;
+Np.off = off;
+Np.trigger = trigger;
+Np.handlers = {};
+
+
+NLp.on = Ap.on = function (name, callback, context) {
+  this.each(function (node) {
+    on.call(node, name, callback, context);
+  });
+  return this;
+};
+NLp.off = Ap.off = function (event, fn) {
+  this.each(function (node) {
+    off.call(node, event, fn);
+  });
+  return this;
+}
+NLp.trigger = Ap.trigger = function (type, data) {
+  this.each(function (node) {
+    trigger.call(node, type, data)
+  });
+  return this;
+};

@@ -12,7 +12,7 @@ $.Deferred = deferred;
 
 function deferred() {
   var
-    _doneFn = [],
+  _doneFn = [],
     _failFn = [],
     dfd = {
       done: function (fn) {
@@ -33,6 +33,8 @@ function deferred() {
         return dfd.done(fn).fail(fn);
       },
 
+      ttl: deferredTTL,
+
       resolve: _setState(true),
       reject: _setState(false)
     };
@@ -48,29 +50,26 @@ function deferred() {
         dfd.resolve =
         dfd.reject = function () {
           return dfd;
-        };
+      };
 
       dfd[state ? 'done' : 'fail'] = function (fn) {
-        if (typeof fn == 'function') {
-          var currentReturn = fn.call(dfd, lastReturn);
-          if ($.isset(currentReturn)) {
-            lastReturn = currentReturn;
-          }
+        if (typeof fn === 'function') {
+          lastReturn = fn.call(dfd, lastReturn);
         }
         return dfd;
       };
 
       var
-        fn, fns = state ? _doneFn : _failFn,
+      fn, fns = state ? _doneFn : _failFn,
         i = 0,
-        n = fns.length;
+        n = fns === null ? 0 : fns.length;
 
       for (; i < n; i++) {
         fn = fns[i];
-        if (typeof fn == 'function') {
-          var currentReturn = fn.call(dfd, lastReturn);
-          if ($.isset(currentReturn)) {
-            lastReturn = currentReturn;
+        if (typeof fn === 'function') {
+          var _return = fn.call(dfd, lastReturn);
+          if ($.isset(_return)) {
+            lastReturn = _return;
           }
         }
       }
@@ -91,13 +90,16 @@ function deferred() {
  */
 deferred.when = function (args) {
   var
-    dfd = deferred(),
+  dfd = deferred(),
     d, i = args.length,
     remain = i || 1,
-    _doneFn = function () {
+    retArr = [],
+    _doneFn = function (retObj) {
+      retArr.push(retObj);
       if (--remain === 0) {
-        dfd.resolve();
+        dfd.resolve(retArr);
       }
+      return retObj;
     };
 
   if (i === 0) {
@@ -105,7 +107,7 @@ deferred.when = function (args) {
   } else {
     while (i--) {
       d = args[i];
-      if (d && d.then) {
+      if ($.isset(d) && $.isset(d.then)) {
         d.then(_doneFn, dfd.reject);
       }
     }
@@ -113,3 +115,28 @@ deferred.when = function (args) {
 
   return dfd;
 };
+
+
+function deferredTTL(eventName, eventEmiter) {
+  if ($.isUndefined(eventName)) {
+    eventName = 'router:change';
+  }
+  if ($.isUndefined(eventEmiter)) {
+    eventEmiter = $;
+  }
+  var XHR = this.XHR;
+  function remove() {
+    if (XHR.status === 200) {
+      return;
+    }
+    XHR.abort();
+  }
+  if (eventName == 'remove') {
+    eventEmiter.add([{ // View.prototype.add
+      remove: remove
+    }]);
+  } else {
+    eventEmiter.once(eventName, remove)
+  }
+  return this;
+}

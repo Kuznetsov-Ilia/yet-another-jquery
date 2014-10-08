@@ -8,7 +8,7 @@
     $.keys
   exports:
     $.ajax
-    $['head','get','put','post','delete','patch','trace','connect','options']
+    $.ajax['head','get','put','post','delete','patch','trace','connect','options']
 */
 $.ajax = ajax;
 $.extend($.ajax, $.events);
@@ -18,8 +18,7 @@ $.extend($.ajax, $.events);
     return ajax(method, url, options, data, res);
   }
 });
-
-$.jsonp = function(url, data, options) {
+$.jsonp = function (url, data) {
   var def = $.Deferred();
   var script = $.new('script');
   var rand = '_' + $.rand();
@@ -34,16 +33,13 @@ $.jsonp = function(url, data, options) {
   var src = url + (url.indexOf('?') === -1 ? '?' : '') + data;
   W[rand] = function (res) {
     def.resolve(res);
-    setTimeout(function(){
-      B.removeChild(script);
-      delete W[rand];
-    }, 0);
+    W[rand] = null;
+    B.removeChild(script);
   }
-  script.src = src;
   B.appendChild(script);
+  script.src = src;
   return def;
 }
-
 var XHR_DEFAULT_TIMEOUT = 5000; // default request timeout
 /*var XHR_CLOSED = 0; // ReadyState status codes 
 var XHR_OPENED = 1;
@@ -51,22 +47,30 @@ var XHR_SENT = 2;
 var XHR_RECEIVED = 3;*/
 var XHR_DONE = 4;
 
+['FormData', 'ArrayBuffer', 'ArrayBufferView', 'Blob'].each(function (constructor) {
+  if (!(constructor in window)) {
+    window[constructor] = $.noop;
+  }
+})
+
+
 function ajax(method, url, data, options) {
   if (method == 'jsonp') {
-    return $.jsonp(url, data, options);
+    return $.jsonp(url, data);
   }
+  method = method.toUpperCase();
   var xhr = new XMLHttpRequest();
   var res = $.Deferred();
   options = $.extend({
     timeout: XHR_DEFAULT_TIMEOUT,
     headers: {
-      'content-type': 'application/json',
-      'accept': 'application/json'
+      'Content-type': 'application/x-www-form-urlencoded',// 'application/json',
+      Accept: 'application/json'
     }
   }, options);
 
-  if (options.charset) {
-    options.headers['accept-charset'] = options.charset;
+  if ($.isset(options.charset)) {
+    options.headers['Accept-charset'] = options.charset;
   }
 
   xhr.onreadystatechange = function () {
@@ -108,25 +112,29 @@ function ajax(method, url, data, options) {
   }
 
   if ($.isset(data)) {
-    var needToTransform = $.isObject(data);
     if ($.isObject(data)) {
-      if ('FormData' in window && data instanceof FormData) {
-        needToTransform = false
+      if (data instanceof FormData || data instanceof ArrayBuffer || data instanceof ArrayBufferView || data instanceof Blob) {
+        /*
+          FormData, ArrayBuffer, ArrayBufferView, Blob
+          are native data types for XHR2
+        */
+      } else {
+        if (options.headers['Content-type'].indexOf('json') >= 0) {
+          if (method == 'PUT') {
+            data = JSON.stringify(data);
+          } else if (method == 'POST') {
+            data = 'json=' + JSON.stringify(data);
+          }
+        } else {
+          data = $.param(data);
+        }
       }
-      //  TODO
-      //ArrayBuffer
-      //ArrayBufferView
-      //Blob
-    }
-    if (needToTransform) {
-      //JSON.stringify(data); нахуя это бывает нужно?
-      data = $.param(data);
-    }
-    if (['get', 'head'].indexOf(method) !== -1) {
-      url = url + (url.indexOf('?') === -1 ? '?': '') + data;
+    } 
+
+    if (['GET', 'HEAD'].indexOf(method) !== -1 && $.isString(data)) {
+      url = url + '?' + data;
       data = null;
     }
-
   }
 
   try {

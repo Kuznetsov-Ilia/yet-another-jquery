@@ -31,6 +31,7 @@ function View(_options) {
   this.cid = VIEW_UID++;
   var options = $.extend({}, VIEW_DEFAULTS, this.defaults, _options);
   $.extend(this, options);
+  this._ensureElement();
   this.initialize(options).delegateEvents();
 }
 
@@ -54,7 +55,7 @@ $.extend(View.prototype, $.events, {
     }
 
     this.init(options);
-    if (options.render) {
+    if ($.is(options.autoRender)) {
       this.render();
     }
     return this;
@@ -92,8 +93,13 @@ $.extend(View.prototype, $.events, {
     } else {
       console.error('unknown whereToRender method:', this.whereToRender, VIEW_RENDER_METHODS);
     }
+    if ($.isFunction(this.clearTimer)) {
+      this.clearTimer();
+    }
+    this.afterRender(model, data);
     return this;
   },
+  afterRender: $.noop,
 
   // Remove this view by taking the element out of the DOM, and removing any
   // applicable Backbone.Events listeners.
@@ -151,6 +157,11 @@ $.extend(View.prototype, $.events, {
   undelegateEvents: function () {
     this.el.off();
     return this;
+  },
+  _ensureElement: function() {
+    if (!this.el) {
+      this.el = $.new('div');
+    }
   }
 
 });

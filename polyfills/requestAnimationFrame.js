@@ -1,29 +1,29 @@
-if (!window.requestAnimationFrame) {
+if (!W.requestAnimationFrame) {
 
-    window.requestAnimationFrame = window.msRequestAnimationFrame ||
-    window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame ||
+    W.requestAnimationFrame = W.msRequestAnimationFrame ||
+    W.mozRequestAnimationFrame || W.webkitRequestAnimationFrame ||
     new function () {
         var fps = 60,
             delay = 1000 / fps,
-            navigationStart = (new Date).getTime(),
+            navigationStart = $.now(),
             prevCallTime = navigationStart;
         return function (callback) {
-            var curCallTime = (new Date).getTime(),
+            var curCallTime = $.now(),
                 timeout = Math.max(0, delay - (curCallTime - prevCallTime)),
                 timeToCall = curCallTime + timeout;
             prevCallTime = timeToCall;
-            return window.setTimeout(function () {
+            return W.setTimeout(function () {
                 callback(timeToCall - navigationStart);
             }, timeout);
         };
     };
 
-    window.cancelAnimationFrame = window.mozCancelAnimationFrame ||
-    window.webkitCancelAnimationFrame || window.cancelRequestAnimationFrame ||
-    window.msCancelRequestAnimationFrame || window.mozCancelRequestAnimationFrame ||
-    window.webkitCancelRequestAnimationFrame || window.clearTimeout;
+    W.cancelAnimationFrame = W.mozCancelAnimationFrame ||
+    W.webkitCancelAnimationFrame || W.cancelRequestAnimationFrame ||
+    W.msCancelRequestAnimationFrame || W.mozCancelRequestAnimationFrame ||
+    W.webkitCancelRequestAnimationFrame || W.clearTimeout;
 
 }
 
-window.rAF = window.requestAnimationFrame;
-window.cAF = window.cancelAnimationFrame;
+W.rAF = W.requestAnimationFrame;
+W.cAF = W.cancelAnimationFrame;
