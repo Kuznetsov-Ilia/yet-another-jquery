@@ -3,7 +3,7 @@ module.exports = {
   polyfills               : {
     base                  : ['$', 'Array2NodeList', 'utils'],
     DOM                   : ['events', 'find', 'matches'],
-    Function              : ['debounce, throttle'],
+    Function              : ['debounce', 'throttle'],
     gabarits              : 1,
     HTMLFormElement       : 1,
     //requestAnimationFrame : 1

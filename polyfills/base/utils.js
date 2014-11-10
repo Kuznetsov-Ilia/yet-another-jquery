@@ -74,6 +74,40 @@ var UTILS = {
       return this.parentElement;
     }
   },
+
+  parentAll: function (filter) {
+    if ($.isset(filter)) {
+      var filterFn;
+      if ($.isNumber(filter)) {
+        filterFn = function(node, i) {
+          return i === filter
+        }
+      } else {
+        filterFn = function(node) {
+          return node.matches(filter)
+        }
+      }
+
+      var parent = this;
+      var i = 1;
+      var result = [];
+      while (parent = parent.parentElement) {
+        if (filterFn(parent, i)) {
+          result.push(parent);
+        }
+        i++;
+      }
+      return result;
+    } else {
+      var parent = this;
+      var result = [];
+      while (parent = parent.parentElement) {
+        result.push(parent);
+      }
+      return result;
+    }
+  },
+
   siblings: function (filter) {
     var _this = this;
     return this.parent().children.filter(function (child) {
@@ -90,15 +124,47 @@ var UTILS = {
       var result = [];
       while (prev = prev.previousElementSibling) {
         if (prev.matches(filter)) {
+          return prev;
+        }
+      }
+      return false;
+    } else {
+      return this.previousElementSibling;
+    }
+  },
+  prevAll: function (filter) {
+    if ($.isset(filter)) {
+      var prev = this;
+      var result = [];
+      while (prev = prev.previousElementSibling) {
+        if (prev.matches(filter)) {
           result.push(prev);
         }
       }
       return result;
     } else {
-      return this.previousElementSibling;
+      var prev = this;
+      var result = [];
+      while (prev = prev.previousElementSibling) {
+        result.push(prev);
+      }
+      return result;
     }
   },
   next: function (filter) {
+    if ($.isset(filter)) {
+      var next = this;
+      while (next = next.nextElementSibling) {
+        if (next.matches(filter)) {
+          return next;
+        }
+      }
+      return false;
+    } else {
+      return this.nextElementSibling;
+    }
+  },
+  nextAll: function (filter) {
     if ($.isset(filter)) {
       var next = this;
       var result = [];
@@ -109,7 +175,12 @@ var UTILS = {
       }
       return result;
     } else {
-      return this.nextElementSibling;
+      var next = this;
+      var result = [];
+      while (next = next.nextElementSibling) {
+        result.push(next);
+      }
+      return result;
     }
   },
   first: function (filter) {
@@ -256,6 +327,7 @@ var UTILS = {
     return this.cloneNode(true);
   }
 }
+
 var CACHE = {};
 var CACHE_KEY = 0;
 
@@ -268,9 +340,10 @@ function camelCase(string) {
 
 function nodeListToNode(methodName) {
   return function () {
+    var args = arguments;
     var returnVals = [];
     this.each(function (node) {
-      returnVals.push(UTILS[methodName].apply(node, arguments));
+      returnVals.push(UTILS[methodName].apply(node, args));
     });
     return returnVals;
   }
